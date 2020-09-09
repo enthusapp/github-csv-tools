@@ -53,8 +53,18 @@ const getFullCommentData = async (octokit, values, data, verbose = false) => {
 
 const writeFile = async (data, fileName = false) => {
   return new Promise((resolve, reject) => {
+    const newData = new Map();
+    data.forEach(({ issue: { body, ...others }, ...com }) => {
+      const { number } = others;
+      newData.set(number, others);
+      newData.set(body, { number: body });
+      if (com && com.comment && com.comment.body) {
+        const { comment: { body: commentBody } } = com;
+        newData.set(commentBody, { number: commentBody });
+      }
+    });
     converter.json2csv(
-      data,
+      Array.from(newData.values()),
       (err, csvString) => {
         if (err) {
           reject(new Error("Invalid!"));
